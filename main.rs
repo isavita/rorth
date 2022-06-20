@@ -1,5 +1,4 @@
-use std::env;
-use std::process;
+use std::{env, process};
 
 #[derive(Debug)]
 enum Op {
@@ -10,6 +9,16 @@ enum Op {
 }
 
 fn main() {
+    let output = process::Command::new("echo")
+                     .arg("\"Hello!!!\"")
+                     .output()
+                     .expect("failed to execute process");
+    /*
+    println!("{:?}", output);
+    println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
+    println!("__END__");
+    */
+
     let mut args: Vec<String> = env::args().collect();
     if args.len() < 2 {
         println!("Usage: rorth <SUBCOMMAND> [ARGS]");
@@ -22,7 +31,7 @@ fn main() {
     let sub_cmd = args.remove(1);
     match sub_cmd.as_str() {
         "sim" => demo(),
-        "com" => todo!(),
+        "com" => compile(&vec![Op::Push(1)]),
         _ => panic!("unkown subcommand: {}", sub_cmd),
     }
 }
@@ -69,4 +78,14 @@ fn simulate(program: &Vec<Op>) {
 }
 
 fn compile(program: &Vec<Op>) {
+    use std::fs::File;
+    use std::io::Write;
+
+    let mut file = File::create("output.asm").unwrap();
+    writeln!(file, ".global _main").unwrap();
+    writeln!(file, ".align 4\n").unwrap();
+    writeln!(file, "_main:").unwrap();
+    writeln!(file, "  mov X0, #0").unwrap();
+    writeln!(file, "  mov X16, #1").unwrap();
+    writeln!(file, "  svc 0").unwrap();
 }
