@@ -85,7 +85,44 @@ fn compile(program: &Vec<Op>) {
     writeln!(file, ".global _main").unwrap();
     writeln!(file, ".align 4\n").unwrap();
     writeln!(file, "_main:").unwrap();
-    writeln!(file, "  mov X0, #0").unwrap();
-    writeln!(file, "  mov X16, #1").unwrap();
-    writeln!(file, "  svc 0").unwrap();
+    for op in program {
+        match *op {
+            Push(x) => {
+                writeln!(file, "  mov X0, #0").unwrap();
+                writeln!(file, "  mov X16, #1").unwrap();
+                writeln!(file, "  svc 0").unwrap();
+            },
+            Plus => {
+            },
+            Minus => {
+            },
+
+            Dump => {
+            },
+        }
+    }
+   drop(file);
+
+    build_assembly();
+}
+
+fn build_assembly() {
+    use std::str;
+
+    process::Command::new("as")
+        .args(["output.asm", "-o", "output.o"])
+        .output()
+        .expect("failed to execute process");
+
+    let mac_sdk_path = process::Command::new("xcrun")
+        .args(["-sdk", "macosx", "--show-sdk-path"])
+        .output()
+        .expect("failed to execute process").stdout;
+    let mac_sdk_path = str::from_utf8(&mac_sdk_path).unwrap().trim();
+
+    process::Command::new("ld")
+        .args(["output.o", "-o", "output", "-lSystem", "-syslibroot", mac_sdk_path])
+        .output()
+        .expect("failed to execute process");
+
 }
